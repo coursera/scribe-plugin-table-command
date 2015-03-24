@@ -1,0 +1,16 @@
+{
+  "name": "scribe-plugin-table-command",
+  "version": "0.1.0",
+  "description": "Table command for Scribe",
+  "main": "src/scribe-plugin-table-command.js",
+  "scripts": {
+    "build": "webpack && webpack --config webpack.config.min.js"
+  },
+  "dependencies": {
+    "extract-text-webpack-plugin": "^0.3.8",
+    "css-loader": "^0.9.1",
+    "style-loader": "^0.8.3",
+    "stylus-loader": "^0.6.0",
+    "webpack": "^1.7.3"
+  }
+}
