@@ -14,7 +14,7 @@ scribe.use(tableCommand());
 ## Installation
 
 ```
-npm run build
+bower install scribe-plugin-table-command
 ```
 
 ## Contribute
