@@ -1,0 +1,14 @@
+{
+  "name": "scribe-plugin-table-command",
+  "homepage": "https://github.com/coursera/scribe-plugin-table-command",
+  "version": "0.1.0",
+  "_release": "0.1.0",
+  "_resolution": {
+    "type": "version",
+    "tag": "0.1.0",
+    "commit": "d9a0ae820fd7abb408f9bf3a403c6b7d9b440eff"
+  },
+  "_source": "git://github.com/coursera/scribe-plugin-table-command.git",
+  "_target": "0.1.0",
+  "_originalSource": "scribe-plugin-table-command"
+}
