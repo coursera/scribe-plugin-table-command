@@ -4,10 +4,10 @@ Command to create and manipulate tables in [scribe](https://github.com/guardian/
 
 ## Usage
 
-```
-var tableCommand = require('scribe-plugin-table-command');
+```javascript
 require('css!scribe-plugin-table-command');
 
+var tableCommand = require('scribe-plugin-table-command');
 scribe.use(tableCommand());
 ```
 
