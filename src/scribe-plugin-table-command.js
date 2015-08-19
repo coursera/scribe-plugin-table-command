@@ -117,6 +117,7 @@ module.exports = function() {
 
       if (table) {
         event.preventDefault();
+        event.stopPropagation();
         contextMenu.show(table, tableCell);
       }
     }

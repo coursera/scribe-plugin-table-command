@@ -44,7 +44,7 @@ var getOffset = function(el) {
   var left = 0;
 
   while (el) {
-    top += el.offsetTop;
+    top += el.offsetTop - el.scrollTop;
     left += el.offsetLeft;
     el = el.offsetParent;
   }
@@ -75,7 +75,7 @@ var TableContextMenu = function(scribe) {
     TABLE_ACTIONS.forEach(function(action) {
       var option = document.createElement('div');
       option.className = CONTEXT_MENU_ACTION_CLASS;
-      option.innerText = action.text;
+      option.textContent = action.text;
 
       option.addEventListener('click', function(event) {
         event.preventDefault();
@@ -87,7 +87,13 @@ var TableContextMenu = function(scribe) {
     }.bind(this));
 
     document.body.appendChild(menu);
-    document.addEventListener('click', this.hide);
+
+    document.addEventListener('click', function(event) {
+      // ignore right click from the contextmenu event.
+      if (event.which !== 3) {
+        this.hide();
+      }
+    }.bind(this));
   };
 
   /**
