@@ -1,6 +1,6 @@
 {
   "name": "scribe-plugin-table-command",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Table command for Scribe",
   "main": "src/scribe-plugin-table-command.js",
   "scripts": {
