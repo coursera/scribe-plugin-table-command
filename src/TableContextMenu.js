@@ -44,8 +44,13 @@ var getOffset = function(el) {
   var left = 0;
 
   while (el) {
-    top += el.offsetTop - el.scrollTop;
+    top += el.offsetTop;
     left += el.offsetLeft;
+
+    if (el !== document.body) {
+      top -= el.scrollTop;
+    }
+
     el = el.offsetParent;
   }
 
