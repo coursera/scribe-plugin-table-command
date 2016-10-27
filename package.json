@@ -3,7 +3,7 @@
   "version": "0.2.0",
   "description": "Table command for Scribe",
   "main": "dist/scribe-plugin-table-command.js",
-  "files" : [
+  "files": [
     "dist"
   ],
   "scripts": {
