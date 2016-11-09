@@ -5,7 +5,7 @@ module.exports = {
   output: {
     path: "build",
     filename: "scribe-plugin-table-command.js",
-    libraryTarget: "amd"
+    libraryTarget: "umd"
   },
   module: {
     loaders: [{
