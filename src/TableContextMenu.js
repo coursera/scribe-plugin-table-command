@@ -7,34 +7,59 @@ require('./scribe-plugin-table-command.styl');
 var TableUtils = require('./TableUtils');
 
 // Actions supported by the context menu
-var TABLE_ACTIONS = [{
-  id: 0,
-  text: 'Insert row above'
-},
-{
-  id: 1,
-  text: 'Insert row below'
-},
-{
-  id: 2,
-  text: 'Insert column left'
-},
-{
-  id: 3,
-  text: 'Insert column right'
-},
-{
-  id: 4,
-  text: 'Delete row'
-},
-{
-  id: 5,
-  text: 'Delete column'
-},
-{
-  id: 6,
-  text: 'Delete table'
-}];
+var TABLE_ACTIONS = [
+  {
+    text: 'Inserir linha acima',
+    run: function(scribe, table, tableCell, action, cellPosition) { TableUtils.insertRow(scribe, table, cellPosition.rowIndex) },
+    test: function(table, tableCell) { return tableCell.parentNode.parentNode.nodeName === 'TBODY' }
+  },
+  {
+    text: 'Inserir linha abaixo',
+    run: function(scribe, table, tableCell, action, cellPosition) { TableUtils.insertRow(scribe, table, cellPosition.rowIndex + 1) },
+    test: function(table, tableCell) { return tableCell.parentNode.parentNode.nodeName === 'TBODY' }
+  },
+  {
+    text: 'Inserir coluna à esquerda',
+    run: function(scribe, table, tableCell, action, cellPosition) { TableUtils.insertColumn(scribe, table, cellPosition.columnIndex) }
+  },
+  {
+    text: 'Inserir coluna à direita',
+    run: function(scribe, table, tableCell, action, cellPosition) { TableUtils.insertColumn(scribe, table, cellPosition.columnIndex + 1) }
+  },
+  {
+    text: 'Adicionar cabeçalho',
+    run: function(scribe, table, tableCell, action, cellPosition) { TableUtils.insertHeader(scribe, table) },
+    test: function(table, tableCell) { return TableUtils.getFirstTypeOfNode(table, 'THEAD') === null }
+  },
+  {
+    text: 'Remover cabeçalho',
+    run: function(scribe, table, tableCell, action, cellPosition) { TableUtils.removeHeader(scribe, table) },
+    test: function(table, tableCell) { return tableCell.parentNode.parentNode.nodeName === 'THEAD' }
+  },
+  {
+    text: 'Remover linha',
+    run: function(scribe, table, tableCell, action, cellPosition) { TableUtils.removeRow(scribe, table, cellPosition.rowIndex) },
+    test: function(table, tableCell) { return tableCell.parentNode.parentNode.nodeName === 'TBODY' }
+  },
+  {
+    text: 'Adicionar rodapé',
+    run: function(scribe, table, tableCell, action, cellPosition) { TableUtils.insertFooter(scribe, table) },
+    test: function(table, tableCell) { return TableUtils.getFirstTypeOfNode(table, 'TFOOT') === null }
+  },
+  {
+    text: 'Remover rodapé',
+    run: function(scribe, table, tableCell, action, cellPosition) { TableUtils.removeFooter(scribe, table) },
+    test: function(table, tableCell) { return tableCell.parentNode.parentNode.nodeName === 'TFOOT' }
+  },
+  {
+    text: 'Remover coluna',
+    run: function(scribe, table, tableCell, action, cellPosition) { TableUtils.removeColumn(scribe, table, cellPosition.columnIndex) }
+  },
+  {
+    text: 'Remover tabela',
+    run: function(scribe, table, tableCell, action, cellPosition) { TableUtils.removeTable(scribe, table) }
+  }
+]
 
 var CONTEXT_MENU_CLASS = 'scribe-table-context-menu';
 var CONTEXT_MENU_ACTION_CLASS = 'scribe-table-context-menu-action';
@@ -77,7 +102,13 @@ var TableContextMenu = function(scribe) {
     menu.style.top = offset.top + 20 + 'px';
     menu.style.left = offset.left + 20 + 'px';
 
+    var cellPosition = TableUtils.findCellPosition(table, tableCell);
+
     TABLE_ACTIONS.forEach(function(action) {
+      if (action.test && !action.test(table, tableCell)) {
+        return;
+      }
+
       var option = document.createElement('div');
       option.className = CONTEXT_MENU_ACTION_CLASS;
       option.textContent = action.text;
@@ -85,7 +116,8 @@ var TableContextMenu = function(scribe) {
       option.addEventListener('click', function(event) {
         event.preventDefault();
         event.stopPropagation();
-        this.handleAction(table, tableCell, action);
+        action.run(scribe, table, tableCell, action, cellPosition);
+        this.hide();
       }.bind(this));
 
       menu.appendChild(option);
@@ -111,41 +143,6 @@ var TableContextMenu = function(scribe) {
     }
 
     document.removeEventListener('click', this.hide);
-  };
-
-  /**
-   * Handle action selection from the context menu.
-   * @param {HTMLElement} table Table element
-   * @param {HTMLElement} tableCell Table cell that was the target of the right click
-   * @param {object} action Table Action from TABLE_ACTIONS
-   */
-  this.handleAction = function(table, tableCell, action) {
-    var cellPosition = TableUtils.findCellPosition(table, tableCell);
-    this.hide();
-
-    switch (action.id) {
-      case 0:
-        TableUtils.insertRow(scribe, table, cellPosition.rowIndex);
-        break;
-      case 1:
-        TableUtils.insertRow(scribe, table, cellPosition.rowIndex + 1);
-        break;
-      case 2:
-        TableUtils.insertColumn(scribe, table, cellPosition.columnIndex);
-        break;
-      case 3:
-        TableUtils.insertColumn(scribe, table, cellPosition.columnIndex + 1);
-        break;
-      case 4:
-        TableUtils.removeRow(scribe, table, cellPosition.rowIndex);
-        break;
-      case 5:
-        TableUtils.removeColumn(scribe, table, cellPosition.columnIndex);
-        break;
-      case 6:
-        TableUtils.removeTable(scribe, table);
-        break;
-    }
   };
 
   return this;

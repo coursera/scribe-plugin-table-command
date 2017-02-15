@@ -3,15 +3,15 @@
  */
 var TableUtils = {
 
-  createTableCell: function() {
-    var tableCell = document.createElement('td');
+  createTableCell: function(nodeName = 'td') {
+    var tableCell = document.createElement(nodeName);
     return tableCell;
   },
 
-  createTableRow: function(columnCount) {
+  createTableRow: function(columnCount, nodeName = 'td') {
     var tableRow = document.createElement('tr');
     for (var i = 0; i < columnCount; i++) {
-      tableRow.appendChild(TableUtils.createTableCell());
+      tableRow.appendChild(TableUtils.createTableCell(nodeName));
     }
 
     return tableRow;
@@ -19,25 +19,75 @@ var TableUtils = {
 
   createTable: function(rowCount, columnCount) {
     var table = document.createElement('table');
+    var tableHead = document.createElement('thead');
     var tableBody = document.createElement('tbody');
+    var tableFooter = document.createElement('tfoot');
+
+    tableHead.appendChild(TableUtils.createTableRow(columnCount, 'th'));
+    tableFooter.appendChild(TableUtils.createTableRow(columnCount));
 
     for (var i = 0; i < rowCount; i++) {
       tableBody.appendChild(TableUtils.createTableRow(columnCount));
     }
 
+    table.appendChild(tableHead);
     table.appendChild(tableBody);
+    table.appendChild(tableFooter);
     return table;
   },
 
-  getColumnCount: function(table) {
-    var body = table.childNodes[0];
-    var rows = body.childNodes;
-    return rows[0].childNodes.length;
+  getTableBody: function(table) {
+    var nodes = table.childNodes;
+
+    for (var i = 0; i < nodes.length; i++) {
+      var node = nodes[i];
+      if (node.nodeName === 'TBODY') {
+        return node;
+      }
+    }
+
+    return null;
   },
 
-  getRowCount: function(table) {
-    var body = table.childNodes[0];
+  getColumnCount: function(table) {
+    var rows = TableUtils.getAllRows(table);
+    var maxLength = 0;
+
+    for (var i = 0; i < rows.length; i++) {
+      var rowColumns = rows[i].childNodes.length;
+
+      if (rowColumns > maxLength) {
+        maxLength = rowColumns;
+      }
+    }
+    return maxLength;
+  },
+
+  getBodyRowCount: function(table) {
+    var body = TableUtils.getTableBody(table);
     return body.childNodes.length;
+  },
+
+  getAllRows: function(table) {
+    var rows = [];
+    var tableNodes = table.childNodes;
+    for (var i = 0; i < tableNodes.length; i++) {
+      var tableNode = tableNodes[i];
+      Array.prototype.push.apply(rows, Array.prototype.slice.call(tableNode.childNodes));
+    }
+
+    return rows;
+  },
+
+  getFirstTypeOfNode: function(parent, nodeName) {
+    var child = parent.childNodes;
+    for (var i = 0; i < child.length; i++) {
+      if (child[i].nodeName === nodeName) {
+        return child[i];
+      }
+    }
+
+    return null;
   },
 
   // Finder operations
@@ -55,11 +105,11 @@ var TableUtils = {
   },
 
   findTableCell: function(scribe, el) {
-    while (el && el !== scribe.el && el.nodeName !== 'TD') {
+    while (el && el !== scribe.el && (el.nodeName !== 'TD' && el.nodeName !== 'TH')) {
       el = el.parentNode;
     }
 
-    if (el && el.nodeName !== 'TD') {
+    if (el && (el.nodeName !== 'TD' && el.nodeName !== 'TH')) {
       el = null;
     }
 
@@ -67,8 +117,7 @@ var TableUtils = {
   },
 
   findCellPosition: function(table, targetTableCell) {
-    var body = table.childNodes[0];
-    var rows = Array.prototype.slice.call(body.childNodes);
+    var rows = TableUtils.getAllRows(table);
     var position = {
       rowIndex: -1,
       columnIndex: -1
@@ -104,7 +153,7 @@ var TableUtils = {
 
   insertRow: function(scribe, table, rowIndex) {
     var columnCount = TableUtils.getColumnCount(table);
-    var body = table.childNodes[0];
+    var body = TableUtils.getTableBody(table);
     var rowAtIndex = body.childNodes[rowIndex];
     var newRow = TableUtils.createTableRow(columnCount);
 
@@ -115,18 +164,18 @@ var TableUtils = {
   },
 
   removeRow: function(scribe, table, rowIndex) {
-    if (this.getRowCount(table) === 1) {
+    if (this.getBodyRowCount(table) === 1) {
       this.removeTable(scribe, table);
       return;
     }
 
-    var body = table.childNodes[0];
+    var body = TableUtils.getTableBody(table);
     var rowAtIndex = body.childNodes[rowIndex];
 
     scribe.transactionManager.run(function() {
       body.removeChild(rowAtIndex);
 
-      if (rowIndex >= TableUtils.getRowCount(table)) {
+      if (rowIndex >= TableUtils.getBodyRowCount(table)) {
         rowIndex --;
       }
 
@@ -137,23 +186,32 @@ var TableUtils = {
   // Column operations
 
   insertColumn: function(scribe, table, columnIndex) {
-    var body = table.childNodes[0];
-    var rows = Array.prototype.slice.call(body.childNodes);
+    var body = TableUtils.getTableBody(table);
+    var rows = TableUtils.getAllRows(table);
 
     scribe.transactionManager.run(function() {
       rows.forEach(function(row) {
-        var cell = TableUtils.createTableCell();
+        var cell = TableUtils.createTableCell(row.childNodes[0].nodeName);
         row.insertBefore(cell, row.childNodes[columnIndex]);
       });
 
-      this.select(scribe, body.childNodes[0].childNodes[columnIndex]);
+      // Find a cell to select
+      for (var i = 0; i < rows.length; i++) {
+        var row = rows[i];
+
+        if (row.childNodes.length > columnIndex) {
+          this.select(scribe, row.childNodes[columnIndex]);
+          break;
+        }
+      }
     }.bind(this));
   },
 
+  // TODO Support the removal of columns at the header and footer
   removeColumn: function(scribe, table, columnIndex) {
     var columnCount = this.getColumnCount(table);
-    var body = table.childNodes[0];
-    var rows = Array.prototype.slice.call(body.childNodes);
+    var body = TableUtils.getTableBody(table);
+    var rows = TableUtils.getAllRows(table);
 
     if (columnCount === 1) {
       this.removeTable(scribe, table);
@@ -166,6 +224,36 @@ var TableUtils = {
       });
 
       this.select(scribe, body.childNodes[0].childNodes[0]);
+    }.bind(this));
+  },
+
+  insertHeader: function(scribe, table) {
+    var tableHead = document.createElement('thead');
+    tableHead.appendChild(TableUtils.createTableRow(TableUtils.getColumnCount(table), 'th'));
+    
+    table.appendChild(tableHead);
+  },
+
+  insertFooter: function(scribe, table) {
+    var tableFoot = document.createElement('tfoot');
+    tableFoot.appendChild(TableUtils.createTableRow(TableUtils.getColumnCount(table)));
+
+    table.appendChild(tableFoot);
+  },
+
+  removeHeader: function(scribe, table) {
+    var header = TableUtils.getFirstTypeOfNode(table, 'THEAD');
+
+    scribe.transactionManager.run(function() {
+      table.removeChild(header);
+    }.bind(this));
+  },
+
+  removeFooter: function(scribe, table) {
+    var footer = TableUtils.getFirstTypeOfNode(table, 'TFOOT');
+
+    scribe.transactionManager.run(function() {
+      table.removeChild(footer);
     }.bind(this));
   },
 
