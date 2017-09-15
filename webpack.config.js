@@ -3,7 +3,7 @@ var ExtractTextPlugin = require("extract-text-webpack-plugin");
 module.exports = {
   entry: "./src/scribe-plugin-table-command.js",
   output: {
-    path: "build",
+    path: "dist",
     filename: "scribe-plugin-table-command.js",
     libraryTarget: "umd"
   },
