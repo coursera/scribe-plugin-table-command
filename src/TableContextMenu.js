@@ -1,5 +1,5 @@
 /**
- * Right click context menu to perform write operations on a table.
+ * Right-click context menu to perform write operations on a table.
  */
 
 require('./scribe-plugin-table-command.styl');
@@ -9,54 +9,78 @@ var TableUtils = require('./TableUtils');
 // Actions supported by the context menu
 var TABLE_ACTIONS = [
   {
-    text: 'Inserir linha acima',
-    run: function(scribe, table, tableCell, action, cellPosition) { TableUtils.insertRow(scribe, table, cellPosition.rowIndex) },
+    text: 'Insert row above',
+    run: function(scribe, table, tableCell, action, cellPosition) {
+      var rowIndex = cellPosition.rowIndex;
+
+      if (TableUtils.hasHeader(table)) {
+        rowIndex = rowIndex - 1; // account for header
+      }
+
+      TableUtils.insertRow(scribe, table, rowIndex);
+    },
     test: function(table, tableCell) { return tableCell.parentNode.parentNode.nodeName === 'TBODY' }
   },
   {
-    text: 'Inserir linha abaixo',
-    run: function(scribe, table, tableCell, action, cellPosition) { TableUtils.insertRow(scribe, table, cellPosition.rowIndex + 1) },
+    text: 'Insert row below',
+    run: function(scribe, table, tableCell, action, cellPosition) {
+      var rowIndex = cellPosition.rowIndex + 1;
+
+      if (TableUtils.hasHeader(table)) {
+        rowIndex = rowIndex - 1; // account for header
+      }
+
+      TableUtils.insertRow(scribe, table, rowIndex)
+    },
     test: function(table, tableCell) { return tableCell.parentNode.parentNode.nodeName === 'TBODY' }
   },
   {
-    text: 'Inserir coluna à esquerda',
+    text: 'Insert column left',
     run: function(scribe, table, tableCell, action, cellPosition) { TableUtils.insertColumn(scribe, table, cellPosition.columnIndex) }
   },
   {
-    text: 'Inserir coluna à direita',
+    text: 'Insert column right',
     run: function(scribe, table, tableCell, action, cellPosition) { TableUtils.insertColumn(scribe, table, cellPosition.columnIndex + 1) }
   },
   {
-    text: 'Adicionar cabeçalho',
-    run: function(scribe, table, tableCell, action, cellPosition) { TableUtils.insertHeader(scribe, table) },
+    text: 'Insert header',
+    run: function(scribe, table, tableCell, action, cellPosition) { TableUtils.insertHeader(table) },
     test: function(table, tableCell) { return TableUtils.getFirstTypeOfNode(table, 'THEAD') === null }
   },
   {
-    text: 'Remover cabeçalho',
+    text: 'Remove header',
     run: function(scribe, table, tableCell, action, cellPosition) { TableUtils.removeHeader(scribe, table) },
     test: function(table, tableCell) { return tableCell.parentNode.parentNode.nodeName === 'THEAD' }
   },
   {
-    text: 'Remover linha',
-    run: function(scribe, table, tableCell, action, cellPosition) { TableUtils.removeRow(scribe, table, cellPosition.rowIndex) },
-    test: function(table, tableCell) { return tableCell.parentNode.parentNode.nodeName === 'TBODY' }
-  },
-  {
-    text: 'Adicionar rodapé',
-    run: function(scribe, table, tableCell, action, cellPosition) { TableUtils.insertFooter(scribe, table) },
+    text: 'Insert footer',
+    run: function(scribe, table, tableCell, action, cellPosition) { TableUtils.insertFooter(table) },
     test: function(table, tableCell) { return TableUtils.getFirstTypeOfNode(table, 'TFOOT') === null }
   },
   {
-    text: 'Remover rodapé',
+    text: 'Delete footer',
     run: function(scribe, table, tableCell, action, cellPosition) { TableUtils.removeFooter(scribe, table) },
     test: function(table, tableCell) { return tableCell.parentNode.parentNode.nodeName === 'TFOOT' }
   },
   {
-    text: 'Remover coluna',
+    text: 'Delete row',
+    run: function(scribe, table, tableCell, action, cellPosition) {
+    var rowIndex = cellPosition.rowIndex;
+
+      if (TableUtils.hasHeader(table)) {
+        rowIndex = rowIndex - 1; // account for header
+      }
+
+      TableUtils.removeRow(scribe, table, rowIndex)
+    },
+    test: function(table, tableCell) { return tableCell.parentNode.parentNode.nodeName === 'TBODY' }
+  },
+  {
+    text: 'Delete column',
     run: function(scribe, table, tableCell, action, cellPosition) { TableUtils.removeColumn(scribe, table, cellPosition.columnIndex) }
   },
   {
-    text: 'Remover tabela',
+    text: 'Delete table',
     run: function(scribe, table, tableCell, action, cellPosition) { TableUtils.removeTable(scribe, table) }
   }
 ]

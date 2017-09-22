@@ -1,17 +1,28 @@
 /**
  * Utility methods to perform read/write operations on a table element.
  */
+
+const TABLE_HEADER_PLACEHOLDER = '<header>';
+
 var TableUtils = {
 
-  createTableCell: function(nodeName = 'td') {
+  createTableCell: function(nodeName, nodeText) {
+    nodeName = nodeName || 'td';
     var tableCell = document.createElement(nodeName);
+
+    if (nodeText) {
+      var textNode = document.createTextNode(nodeText);
+      tableCell.appendChild(textNode);
+    }
+
     return tableCell;
   },
 
-  createTableRow: function(columnCount, nodeName = 'td') {
+  createTableRow: function(columnCount, nodeName, nodeText) {
+    nodeName = nodeName || 'td';
     var tableRow = document.createElement('tr');
     for (var i = 0; i < columnCount; i++) {
-      tableRow.appendChild(TableUtils.createTableCell(nodeName));
+      tableRow.appendChild(TableUtils.createTableCell(nodeName, nodeText));
     }
 
     return tableRow;
@@ -19,20 +30,15 @@ var TableUtils = {
 
   createTable: function(rowCount, columnCount) {
     var table = document.createElement('table');
-    var tableHead = document.createElement('thead');
     var tableBody = document.createElement('tbody');
-    var tableFooter = document.createElement('tfoot');
-
-    tableHead.appendChild(TableUtils.createTableRow(columnCount, 'th'));
-    tableFooter.appendChild(TableUtils.createTableRow(columnCount));
 
     for (var i = 0; i < rowCount; i++) {
       tableBody.appendChild(TableUtils.createTableRow(columnCount));
     }
 
-    table.appendChild(tableHead);
     table.appendChild(tableBody);
-    table.appendChild(tableFooter);
+    this.insertHeader(table);
+
     return table;
   },
 
@@ -47,6 +53,19 @@ var TableUtils = {
     }
 
     return null;
+  },
+
+  hasHeader: function(table) {
+    var nodes = table.childNodes;
+
+    for (var i = 0; i < nodes.length; i++) {
+      var node = nodes[i];
+      if (node.nodeName === 'THEAD') {
+        return true;
+      }
+    }
+
+    return false;
   },
 
   getColumnCount: function(table) {
@@ -186,7 +205,6 @@ var TableUtils = {
   // Column operations
 
   insertColumn: function(scribe, table, columnIndex) {
-    var body = TableUtils.getTableBody(table);
     var rows = TableUtils.getAllRows(table);
 
     scribe.transactionManager.run(function() {
@@ -227,14 +245,16 @@ var TableUtils = {
     }.bind(this));
   },
 
-  insertHeader: function(scribe, table) {
+  insertHeader: function(table) {
     var tableHead = document.createElement('thead');
-    tableHead.appendChild(TableUtils.createTableRow(TableUtils.getColumnCount(table), 'th'));
-    
-    table.appendChild(tableHead);
+    tableHead.appendChild(TableUtils.createTableRow(
+      TableUtils.getColumnCount(table), 'th', TABLE_HEADER_PLACEHOLDER)
+    );
+
+    table.insertBefore(tableHead, table.childNodes[0]);
   },
 
-  insertFooter: function(scribe, table) {
+  insertFooter: function(table) {
     var tableFoot = document.createElement('tfoot');
     tableFoot.appendChild(TableUtils.createTableRow(TableUtils.getColumnCount(table)));
 
