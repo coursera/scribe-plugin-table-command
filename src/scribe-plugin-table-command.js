@@ -29,11 +29,11 @@ module.exports = function() {
         var nextElement = el.nextSibling;
 
         if (nextElement) {
+          // TODO Fix this
           scribe.el.insertBefore(tableElement, nextElement);
-        }
-
-        else {
+        } else {
           scribe.el.appendChild(tableElement);
+          scribe.el.appendChild(document.createElement('p'));
         }
 
         var body = tableElement.childNodes[0];
@@ -68,41 +68,6 @@ module.exports = function() {
     }
 
     /**
-     * Handle keydown event in the scribe editor.
-     * Used to override Enter behavior.
-     */
-    function handleKeydown(event) {
-      if (event.keyCode === 13) {
-        var selection = new scribe.api.Selection();
-        var range = selection.range;
-        var el = range.endContainer;
-
-        var table = TableUtils.findTable(scribe, el);
-        var tableCell = TableUtils.findTableCell(scribe, el);
-        var index = Array.prototype.indexOf.call(scribe.el.childNodes, table) + 1;
-
-        var newEl = null;
-
-        if (tableCell) {
-          event.preventDefault();
-          newEl = document.createElement('p');
-
-          if (table.nextSibling) {
-            scribe.el.insertBefore(newEl, table.nextSibling);
-          } else {
-            scribe.el.appendChild(newEl);
-          }
-
-          range.setStart(scribe.el.childNodes[index], 0);
-          range.collapse(true);
-
-          selection.selection.removeAllRanges();
-          selection.selection.addRange(range);
-        }
-      }
-    }
-
-    /**
      * Handle right click inside the scribe editor.
      */
     function handleRightClick(event) {
@@ -121,8 +86,7 @@ module.exports = function() {
         contextMenu.show(table, tableCell);
       }
     }
-
-    scribe.el.addEventListener('keydown', handleKeydown);
+    
     scribe.el.addEventListener('contextmenu', handleRightClick);
 
     scribe.commands.table = tableCommand;
