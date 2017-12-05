@@ -3,6 +3,8 @@
  */
 
 const TABLE_HEADER_PLACEHOLDER = '<header>';
+const ROW_HEADER_PLACEHOLDER = '<row header>';
+const ROW_HEADER_PLACEHOLDER_ENCODED = '&lt;row header&gt;'; // for html string replace
 
 var TableUtils = {
 
@@ -18,11 +20,25 @@ var TableUtils = {
     return tableCell;
   },
 
-  createTableRow: function(columnCount, nodeName, nodeText) {
-    nodeName = nodeName || 'td';
+  createTableRow: function(columnCount, nodeName, nodeText, hasRowHeader) {
+    var isRowHeader;
+    var node;
+    var text;
     var tableRow = document.createElement('tr');
+
     for (var i = 0; i < columnCount; i++) {
-      tableRow.appendChild(TableUtils.createTableCell(nodeName, nodeText));
+      isRowHeader = false;
+      node = nodeName || 'td';
+      text = nodeText || '';
+
+      if (i === 0 && hasRowHeader) {
+        // use row header placeholder
+        isRowHeader = true;
+        node = 'th';
+        text = ROW_HEADER_PLACEHOLDER;
+      }
+
+      tableRow.appendChild(TableUtils.createTableCell(node, text));
     }
 
     return tableRow;
@@ -33,7 +49,7 @@ var TableUtils = {
     var tableBody = document.createElement('tbody');
 
     for (var i = 0; i < rowCount; i++) {
-      tableBody.appendChild(TableUtils.createTableRow(columnCount));
+      tableBody.appendChild(TableUtils.createTableRow(columnCount, null, null, true));
     }
 
     table.appendChild(tableBody);
@@ -61,6 +77,22 @@ var TableUtils = {
     for (var i = 0; i < nodes.length; i++) {
       var node = nodes[i];
       if (node.nodeName === 'THEAD') {
+        return true;
+      }
+    }
+
+    return false;
+  },
+
+  hasRowHeaders: function(table) {
+    var body = TableUtils.getTableBody(table);
+    var nodes = body.childNodes;
+
+    // find first body row with a TH cell
+    for (var i = 0; i < nodes.length; i++) {
+      var node = nodes[i];
+
+      if (node.childNodes[0].nodeName === 'TH') {
         return true;
       }
     }
@@ -173,8 +205,9 @@ var TableUtils = {
   insertRow: function(scribe, table, rowIndex) {
     var columnCount = TableUtils.getColumnCount(table);
     var body = TableUtils.getTableBody(table);
+    var hasRowHeaders = TableUtils.hasRowHeaders(table);
     var rowAtIndex = body.childNodes[rowIndex];
-    var newRow = TableUtils.createTableRow(columnCount);
+    var newRow = TableUtils.createTableRow(columnCount, null, null, hasRowHeaders);
 
     scribe.transactionManager.run(function() {
       body.insertBefore(newRow, rowAtIndex);
@@ -206,10 +239,22 @@ var TableUtils = {
 
   insertColumn: function(scribe, table, columnIndex) {
     var rows = TableUtils.getAllRows(table);
+    var hasHeader = TableUtils.hasHeader(table);
+    var hasRowHeaders = TableUtils.hasRowHeaders(table);
+    var cellName;
+    var cellText;
 
     scribe.transactionManager.run(function() {
-      rows.forEach(function(row) {
-        var cell = TableUtils.createTableCell(row.childNodes[0].nodeName);
+      rows.forEach(function(row, idx) {
+        if (idx === 0 && hasHeader) {
+          cellText = TABLE_HEADER_PLACEHOLDER;
+        } else {
+          cellText = '';
+        }
+
+        cellName = hasRowHeaders ? row.childNodes[1].nodeName : row.childNodes[0].nodeName
+
+        var cell = TableUtils.createTableCell(cellName, cellText);
         row.insertBefore(cell, row.childNodes[columnIndex]);
       });
 
@@ -275,6 +320,24 @@ var TableUtils = {
     scribe.transactionManager.run(function() {
       table.removeChild(footer);
     }.bind(this));
+  },
+
+  removeRowHeaders: function(scribe, table) {
+    if (TableUtils.hasRowHeaders(table)) {
+      var body = TableUtils.getTableBody(table);
+      var rows = body.childNodes;
+
+      for (var i = 0; i < rows.length; i++) {
+        var row = rows[i];
+        var headerCell = row.childNodes[0];
+
+        // replace TH with TD and remove placeholder
+        headerCell.outerHTML = headerCell.outerHTML
+          .replace('<th>', '<td>')
+          .replace('</th>', '</td>')
+          .replace(ROW_HEADER_PLACEHOLDER_ENCODED, '');
+      }
+    }
   },
 
   // Table operations
