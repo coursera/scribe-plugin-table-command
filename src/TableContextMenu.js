@@ -30,7 +30,7 @@ var TABLE_ACTIONS = [
         rowIndex = rowIndex - 1; // account for header
       }
 
-      TableUtils.insertRow(scribe, table, rowIndex)
+      TableUtils.insertRow(scribe, table, rowIndex);
     },
     test: function(table, tableCell) { return tableCell.parentNode.parentNode.nodeName === 'TBODY' }
   },
@@ -51,6 +51,11 @@ var TABLE_ACTIONS = [
     text: 'Remove header',
     run: function(scribe, table, tableCell, action, cellPosition) { TableUtils.removeHeader(scribe, table) },
     test: function(table, tableCell) { return tableCell.parentNode.parentNode.nodeName === 'THEAD' }
+  },
+  {
+    text: 'Remove row headers',
+    run: function(scribe, table, tableCell, action, cellPosition) { TableUtils.removeRowHeaders(scribe, table) },
+    test: function(table, tableCell) { return TableUtils.hasRowHeaders(table) }
   },
   {
     text: 'Insert footer',

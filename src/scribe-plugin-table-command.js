@@ -86,7 +86,7 @@ module.exports = function() {
         contextMenu.show(table, tableCell);
       }
     }
-    
+
     scribe.el.addEventListener('contextmenu', handleRightClick);
 
     scribe.commands.table = tableCommand;
