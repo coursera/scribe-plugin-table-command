@@ -100,6 +100,23 @@ var TableUtils = {
     return false;
   },
 
+  hasCaption: function(table) {
+    var nodes = table.childNodes;
+
+    // <caption> is always the first child
+    if (nodes[0]) {
+      return nodes[0].nodeName === 'CAPTION';
+    }
+
+    return false;
+  },
+
+  getCaption: function(table) {
+    var caption = TableUtils.getFirstTypeOfNode(table, 'CAPTION');
+
+    return caption ? caption.textContent : '';
+  },
+
   getColumnCount: function(table) {
     var rows = TableUtils.getAllRows(table);
     var maxLength = 0;
@@ -338,6 +355,32 @@ var TableUtils = {
           .replace(ROW_HEADER_PLACEHOLDER_ENCODED, '');
       }
     }
+  },
+
+  insertCaption: function(scribe, table) {
+    var tableCaption = document.createElement('caption');
+    var existingCaption = TableUtils.hasCaption(table) ? TableUtils.getCaption(table) : '';
+    var captionText = window.prompt(
+      'Enter a descriptive caption for this table',
+      existingCaption
+    );
+
+    if (existingCaption) {
+      TableUtils.removeCaption(scribe, table);
+    }
+
+    var textNode = document.createTextNode(captionText);
+
+    tableCaption.appendChild(textNode);
+    table.insertBefore(tableCaption, table.childNodes[0]);
+  },
+
+  removeCaption: function(scribe, table) {
+    var caption = TableUtils.getFirstTypeOfNode(table, 'CAPTION');
+
+    scribe.transactionManager.run(function() {
+      table.removeChild(caption);
+    }.bind(this));
   },
 
   // Table operations
