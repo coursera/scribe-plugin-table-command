@@ -58,16 +58,6 @@ var TABLE_ACTIONS = [
     test: function(table, tableCell) { return TableUtils.hasRowHeaders(table) }
   },
   {
-    text: 'Insert footer',
-    run: function(scribe, table, tableCell, action, cellPosition) { TableUtils.insertFooter(table) },
-    test: function(table, tableCell) { return TableUtils.getFirstTypeOfNode(table, 'TFOOT') === null }
-  },
-  {
-    text: 'Delete footer',
-    run: function(scribe, table, tableCell, action, cellPosition) { TableUtils.removeFooter(scribe, table) },
-    test: function(table, tableCell) { return tableCell.parentNode.parentNode.nodeName === 'TFOOT' }
-  },
-  {
     text: 'Delete row',
     run: function(scribe, table, tableCell, action, cellPosition) {
     var rowIndex = cellPosition.rowIndex;
@@ -87,7 +77,32 @@ var TABLE_ACTIONS = [
   {
     text: 'Delete table',
     run: function(scribe, table, tableCell, action, cellPosition) { TableUtils.removeTable(scribe, table) }
-  }
+  },
+  {
+    text: 'Insert caption',
+    run: function(scribe, table, tableCell, action, cellPosition) { TableUtils.insertCaption(scribe, table) },
+    test: function(table, tableCell) { return !TableUtils.hasCaption(table) }
+  },
+  {
+    text: 'Edit caption',
+    run: function(scribe, table, tableCell, action, cellPosition) { TableUtils.insertCaption(scribe, table) },
+    test: function(table, tableCell) { return TableUtils.hasCaption(table) }
+  },
+  {
+    text: 'Remove caption',
+    run: function(scribe, table, tableCell, action, cellPosition) { TableUtils.removeCaption(scribe, table) },
+    test: function(table, tableCell) { return TableUtils.hasCaption(table) }
+  },
+  {
+    text: 'Insert footer',
+    run: function(scribe, table, tableCell, action, cellPosition) { TableUtils.insertFooter(table) },
+    test: function(table, tableCell) { return TableUtils.getFirstTypeOfNode(table, 'TFOOT') === null }
+  },
+  {
+    text: 'Delete footer',
+    run: function(scribe, table, tableCell, action, cellPosition) { TableUtils.removeFooter(scribe, table) },
+    test: function(table, tableCell) { return tableCell.parentNode.parentNode.nodeName === 'TFOOT' }
+  },
 ]
 
 var CONTEXT_MENU_CLASS = 'scribe-table-context-menu';
@@ -134,6 +149,8 @@ var TableContextMenu = function(scribe) {
     var cellPosition = TableUtils.findCellPosition(table, tableCell);
 
     TABLE_ACTIONS.forEach(function(action) {
+      // only render menu items that are actionable at the
+      // current state of the table
       if (action.test && !action.test(table, tableCell)) {
         return;
       }
